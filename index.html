@@ -11,8 +11,11 @@
       padding: 0;
     }
 
+    /* 靈動動態背景 */
     body {
-      background: #0f172a;
+      background: linear-gradient(-45deg, #0b0f19, #1b103a, #082032, #0f172a);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
@@ -22,6 +25,12 @@
       justify-content: center;
       overflow: hidden;
       user-select: none;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     h1 {
@@ -35,19 +44,27 @@
       filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.4));
     }
 
-    /* 3D 舞台預設尺寸（電腦端） */
+    /* 3D 舞台 + 3D 浮動跳動動畫 */
     .stage {
       width: 240px;
       height: 320px;
       perspective: 800px;
       position: relative;
       cursor: grab;
+      animation: floatStage 5s ease-in-out infinite;
+      will-change: transform;
     }
     .stage:active {
       cursor: grabbing;
     }
 
-    /* 旋轉容器（開啟硬體加速） */
+    /* 上下浮動跳動感 */
+    @keyframes floatStage {
+      0%, 100% { transform: translateY(0px) rotateX(0deg); }
+      50% { transform: translateY(-14px) rotateX(2deg); }
+    }
+
+    /* 旋轉容器 */
     .carousel {
       width: 100%;
       height: 100%;
@@ -57,21 +74,26 @@
       will-change: transform;
     }
 
-    /* 卡片設計（移除高耗能倒影與毛玻璃以提升效能） */
+    /* 卡片設計 */
     .card {
       position: absolute;
       width: 100%;
       height: 100%;
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 6px;
-      backface-visibility: hidden; /* 隱蔽背面減少渲染負擔 */
+      padding: 8px;
+      backface-visibility: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.6);
     }
 
     /* 完整呈現圖片全貌 */
@@ -81,7 +103,7 @@
       width: auto;
       height: auto;
       object-fit: contain;
-      border-radius: 6px;
+      border-radius: 8px;
       pointer-events: auto;
       cursor: pointer;
     }
@@ -155,14 +177,14 @@
       cursor: pointer;
     }
 
-    /* 📱 針對手機與平板專屬優化（螢幕寬度 768px 以下） */
+    /* 📱 手機端專屬縮放比例 */
     @media (max-width: 768px) {
       h1 {
         font-size: 1.2rem;
         margin-bottom: 10px;
       }
       .stage {
-        width: 180px;  /* 手機端縮小舞台 */
+        width: 180px;
         height: 250px;
         perspective: 600px;
       }
