@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>炫彩靈動 3D 展示相簿</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 靈動動態背景 */
+    body {
+      background: linear-gradient(-45deg, #0b0f19, #1b103a, #082032, #0f172a);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.4));
+    }
+
+    /* 3D 舞台與浮動動畫 */
+    .stage {
+      width: 300px;
+      height: 400px;
+      perspective: 1000px;
+      position: relative;
+      cursor: grab;
+      animation: floatStage 6s ease-in-out infinite;
+    }
+    .stage:active {
+      cursor: grabbing;
+    }
+
+    @keyframes floatStage {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* 旋轉容器 */
+    .carousel {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* 卡片設計：支援倒影與完整圖樣顯示 */
+    .card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      /* 下方漸層倒影 */
+      -webkit-box-reflect: below 12px linear-gradient(transparent 70%, rgba(255, 255, 255, 0.15));
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.4);
+    }
+
+    /* 完整呈現圖片全貌，不強行裁切 */
+    .card img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* 升級版亮眼控制按鈕 */
+    .controls {
+      margin-top: 45px;
+      display: flex;
+      gap: 25px;
+      z-index: 20; /* 確保按鈕層級在最前面 */
+    }
+
+    button {
+      /* 亮眼藍紫漸層與半透明背景 */
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(168, 85, 247, 0.35));
+      border: 1.5px solid rgba(56, 189, 248, 0.8);
+      color: #ffffff;
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 18px rgba(56, 189, 248, 0.4);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* 懸浮發光效果 */
+    button:hover {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.7), rgba(168, 85, 247, 0.7));
+      border-color: rgba(255, 255, 255, 0.95);
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.6), 0 0 25px rgba(168, 85, 247, 0.6);
+    }
+
+    /* 點擊按壓回饋 */
+    button:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* 燈箱：點擊查看滿版圖片全貌 */
+    .lightbox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(15px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .lightbox.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+      transform: scale(0.85);
+      transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    .lightbox.active img {
+      transform: scale(1);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 25px;
+      right: 35px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .lightbox-close:hover {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>PHOTO GALLERY</h1>
+
+  <div class="stage" id="stage">
+    <div class="carousel" id="carousel">
+      <div class="card"><img src="photo1.jpg" alt="Photo 1" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo2.jpg" alt="Photo 2" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo3.jpg" alt="Photo 3" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo4.jpg" alt="Photo 4" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo5.jpg" alt="Photo 5" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo6.jpg" alt="Photo 6" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo7.jpg" alt="Photo 7" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo8.jpg" alt="Photo 8" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo9.jpg" alt="Photo 9" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo10.jpg" alt="Photo 10" onclick="openLightbox(this.src)"></div>
+      <div class="card"><img src="photo11.jpg" alt="Photo 11" onclick="openLightbox(this.src)"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="rotateCarousel(-1)">◀ 上一張</button>
+    <button onclick="rotateCarousel(1)">下一張 ▶</button>
+  </div>
+
+  <div class="hint">可左右滑動切換 ｜ 點擊圖片可放大查看全貌</div>
+
+  <!-- 滿版圖片燈箱元件 -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" src="" alt="Full Image">
+  </div>
+
+  <script>
+    const carousel = document.getElementById('carousel');
+    const stage = document.getElementById('stage');
+    const cards = document.querySelectorAll('.card');
+    const totalCards = cards.length;
+    const angleStep = 360 / totalCards;
+    const radius = 450; // 加大 3D 環狀空間，防止卡片碰撞
+    let currentIndex = 0;
+
+    // 配置 3D 環狀空間
+    cards.forEach((card, index) => {
+      const angle = index * angleStep;
+      card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+    });
+
+    function updateCarousel() {
+      const angle = -currentIndex * angleStep;
+      carousel.style.transform = `rotateY(${angle}deg)`;
+    }
+
+    function rotateCarousel(direction) {
+      currentIndex += direction;
+      updateCarousel();
+    }
+
+    // 滑鼠與觸控拖曳
+    let startX = 0;
+    let isDragging = false;
+
+    function handleStart(e) {
+      isDragging = true;
+      startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    }
+
+    function handleEnd(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      const endX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
+      const diffX = endX - startX;
+
+      if (Math.abs(diffX) > 40) {
+        if (diffX < 0) rotateCarousel(1);
+        else rotateCarousel(-1);
+      }
+    }
+
+    stage.addEventListener('mousedown', handleStart);
+    stage.addEventListener('mouseup', handleEnd);
+    stage.addEventListener('touchstart', handleStart, { passive: true });
+    stage.addEventListener('touchend', handleEnd, { passive: true });
+
+    // 燈箱放大功能
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('active');
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+    }
+  </script>
+
+</body>
+</html>
